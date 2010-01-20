@@ -95,11 +95,21 @@ module MongoMapper
       end
 
       def create(*docs)
-        initialize_each(*docs) { |doc| doc.save }
+        list, options = list_and_options(*docs)
+        initialize_each(*list) { |doc| doc.save(options) }
       end
 
       def create!(*docs)
-        initialize_each(*docs) { |doc| doc.save! }
+        list, options = list_and_options(*docs)
+        initialize_each(*list) { |doc| doc.save!(options) }
+      end
+
+      def list_and_options(*list)
+        options = Array === list.first && Hash === list.last ? list.pop : {}
+        list.flatten!
+        all_hashes = list.all?{|item| item.respond_to?(:to_hash)}
+        list = [Hash[*list.flatten]] unless all_hashes
+        [list, options]
       end
 
       def update(*args)
@@ -346,8 +356,8 @@ module MongoMapper
         !perform_validations || valid? ? create_or_update(options) : false
       end
 
-      def save!
-        save || raise(DocumentNotValid.new(self))
+      def save!(options = {})
+        save(options) || raise(DocumentNotValid.new(self))
       end
       
       def update_attributes(attrs={})

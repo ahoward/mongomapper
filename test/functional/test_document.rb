@@ -144,6 +144,20 @@ class DocumentTest < Test::Unit::TestCase
       document = Doc()
       lambda { document.create }.should change { document.count }.by(1)
     end
+
+    should "allow array of pairs contructor" do
+      document = Doc()
+      lambda do
+        document.create([:first_name, 'John', :last_name, 'Nunemaker', :age, '27'])
+      end. should change { document.count }.by(1)
+    end
+
+    should "allow array of pairs contructor with options" do
+      document = Doc()
+      lambda do
+        document.create([:first_name, 'John', :last_name, 'Nunemaker', :age, '27'], :safe => true)
+      end. should change { document.count }.by(1)
+    end
   end
 
   context "ClassMethods#create (multiple documents)" do
@@ -162,6 +176,14 @@ class DocumentTest < Test::Unit::TestCase
       @doc_instances.map do |doc_instance|
         doc_instance.should be_instance_of(@document)
       end
+    end
+
+    should "allow array of hashes contructor with options" do
+      document = Doc()
+      lambda do
+        doc = {:first_name => 'John', :last_name => 'Nunemaker', :age => '27'}
+        document.create([doc, doc, doc], :safe => true)
+      end. should change { document.count }.by(3)
     end
   end
 
@@ -749,6 +771,22 @@ class DocumentTest < Test::Unit::TestCase
       
       assert_raises(Mongo::OperationFailure) do
         @document.new(:name => 'John').save(:safe => true)
+      end
+    end
+
+    should "allow passing safe to create" do
+      doc = @document.create([:name, 'Ara'], :safe => true)
+      
+      assert_raises(Mongo::OperationFailure) do
+        @document.new(:name => 'Ara').save(:safe => true)
+      end
+    end
+
+    should "allow passing safe to create!" do
+      doc = @document.create!([:name, 'Ara'], :safe => true)
+
+      assert_raises(Mongo::OperationFailure) do
+        doc = @document.create!([:name, 'Ara'], :safe => true)
       end
     end
   end
